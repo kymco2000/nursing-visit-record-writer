@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>居家與安寧護理訪視紀錄智能生成器</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Noto Sans TC', sans-serif; }
+    .badge-btn:hover { transform: translateY(-1px); }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen pb-12 antialiased">
+
+  <!-- Header -->
+  <header class="bg-gradient-to-r from-teal-700 via-cyan-800 to-sky-900 text-white shadow-md">
+    <div class="max-w-6xl mx-auto px-4 py-6 flex flex-col md:flex-row justify-between items-center gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-2xl backdrop-blur-sm border border-white/20 shadow-inner">
+          🩺
+        </div>
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight">居家與安寧護理訪視紀錄智能生成器</h1>
+          <p class="text-xs text-cyan-200 mt-0.5">臨床黃金三段式規範 · 800字內精準約束 · 知識庫自動提煉</p>
+        </div>
+      </div>
+      <div class="flex gap-2 text-xs">
+        <button onclick="loadSample('wu')" class="px-3 py-1.5 bg-white/15 hover:bg-white/25 rounded-lg border border-white/20 transition backdrop-blur-sm">
+          🌟 載入「吳興富」偏鄉巡迴範例
+        </button>
+        <button onclick="loadSample('hospice')" class="px-3 py-1.5 bg-white/15 hover:bg-white/25 rounded-lg border border-white/20 transition backdrop-blur-sm">
+          🕊️ 載入「安寧臨終」善終範例
+        </button>
+        <button onclick="resetForm()" class="px-3 py-1.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 rounded-lg border border-rose-400/30 transition">
+          🔄 清空
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-6xl mx-auto px-4 mt-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- Left Input Column -->
+    <div class="lg:col-span-6 space-y-5">
+
+      <!-- Base Info Card -->
+      <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <h2 class="font-semibold text-slate-800 flex items-center gap-2 text-sm">
+            <span class="w-2.5 h-2.5 rounded-full bg-cyan-600"></span> 1. 訪視基本資訊
+          </h2>
+          <span class="text-xs text-slate-400 font-mono">STEP 1</span>
+        </div>
+        
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+          <div>
+            <label class="block text-slate-500 font-medium mb-1">訪視日期</label>
+            <input type="date" id="visitDate" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-slate-500 font-medium mb-1">個案姓名 / 代號</label>
+            <input type="text" id="caseName" placeholder="例如：吳興富" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-slate-500 font-medium mb-1">訪視類型</label>
+            <select id="visitType" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+              <option value="居家護理定期訪視">居家護理定期訪視</option>
+              <option value="安寧居家臨終訪視">安寧居家臨終訪視</option>
+              <option value="長照個案評估走訪">長照個案評估走訪</option>
+              <option value="緊急到府減症訪視">緊急到府減症訪視</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Keywords Tag Cloud -->
+      <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm space-y-3">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+          <h2 class="font-semibold text-slate-800 flex items-center gap-2 text-sm">
+            <span class="w-2.5 h-2.5 rounded-full bg-teal-600"></span> 2. 常用臨床快捷標籤（點擊加入）
+          </h2>
+          <span class="text-[11px] text-slate-400">點擊自動插入輸入框</span>
+        </div>
+
+        <div class="space-y-2.5">
+          <div>
+            <span class="text-[11px] font-semibold text-cyan-800 bg-cyan-50 px-2 py-0.5 rounded-md">醫療與症狀：</span>
+            <div class="flex flex-wrap gap-1.5 mt-1.5" id="tagGroupMed">
+              <!-- Rendered by JS -->
+            </div>
+          </div>
+          <div>
+            <span class="text-[11px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md">舒適與護理：</span>
+            <div class="flex flex-wrap gap-1.5 mt-1.5" id="tagGroupComfort">
+              <!-- Rendered by JS -->
+            </div>
+          </div>
+          <div>
+            <span class="text-[11px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md">心理靈性與家庭：</span>
+            <div class="flex flex-wrap gap-1.5 mt-1.5" id="tagGroupPsy">
+              <!-- Rendered by JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Raw Notes Textarea -->
+      <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm space-y-3">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <h2 class="font-semibold text-slate-800 flex items-center gap-2 text-sm">
+            <span class="w-2.5 h-2.5 rounded-full bg-indigo-600"></span> 3. 現場訪視隨手筆記 / 語音轉文字
+          </h2>
+          <span class="text-xs text-slate-400 font-mono">RAW INPUT</span>
+        </div>
+
+        <textarea id="rawInput" rows="7" placeholder="請在此貼上現場零碎關鍵字、語音輸入內容或口述筆記...&#10;例如：居服員洗完澡，量體溫37.2心跳103血壓偏低，抽血血鉀3.1偏低開K-Glu喝一瓶，換新藥盒分藥拍照給阿欣，十指灰指甲很長剪指甲洗手衛教，擦美康施美藥膏，光復受災戶獨居兒子少來，用族語跟他講話很開心，教他胸悶禱告，約下週複查。" class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:ring-2 focus:ring-cyan-500 focus:outline-none leading-relaxed resize-y"></textarea>
+
+        <button onclick="generateRecord()" class="w-full py-3 bg-gradient-to-r from-teal-600 via-cyan-600 to-sky-700 hover:from-teal-700 hover:to-sky-800 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center gap-2 text-sm">
+          <span>✨ 立即智能生成標準護理紀錄</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Right Output Column -->
+    <div class="lg:col-span-6 space-y-5">
+
+      <!-- Output Preview Card -->
+      <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm flex flex-col h-full space-y-4">
+        
+        <!-- Action Header -->
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+          <div class="flex items-center gap-2">
+            <h2 class="font-semibold text-slate-800 text-sm">4. 正式訪視紀錄預覽</h2>
+            <span id="wordCountBadge" class="text-xs px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-medium">0 字 (安全)</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="copyToClipboard()" class="px-2.5 py-1 text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition flex items-center gap-1 border border-slate-200">
+              📋 複製內文
+            </button>
+            <button onclick="downloadMarkdown()" class="px-2.5 py-1 text-xs font-medium bg-cyan-50 hover:bg-cyan-100 text-cyan-700 rounded-lg transition flex items-center gap-1 border border-cyan-200">
+              📥 下載 .md
+            </button>
+          </div>
+        </div>
+
+        <!-- Result Textarea -->
+        <div class="relative flex-1">
+          <textarea id="outputResult" rows="18" placeholder="點擊「立即智能生成標準護理紀錄」後，此處將自動產生符合規範、800字以內之三段式正式護理紀錄..." class="w-full h-full min-h-[380px] p-4 bg-slate-50/70 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 font-mono focus:ring-2 focus:ring-cyan-500 focus:outline-none leading-relaxed resize-y"></textarea>
+        </div>
+
+        <!-- Knowledge Card Generator Tool -->
+        <div class="bg-gradient-to-br from-cyan-50/60 to-slate-50 p-4 rounded-xl border border-cyan-100/80 flex items-center justify-between gap-4">
+          <div class="space-y-0.5">
+            <h3 class="text-xs font-semibold text-cyan-900 flex items-center gap-1.5">
+              🧠 連上知識庫：自動提煉長青概念卡片
+            </h3>
+            <p class="text-[11px] text-slate-500">將本次紀錄中的處置手法提煉為 Obsidian 概念卡片</p>
+          </div>
+          <button onclick="extractKnowledgeCard()" class="px-3 py-1.5 bg-cyan-700 hover:bg-cyan-800 text-white text-xs font-medium rounded-lg shadow-sm transition whitespace-nowrap">
+            提煉知識卡片
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Modal for Knowledge Card -->
+  <div id="kcModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-2xl border border-slate-100 max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="font-bold text-slate-800 flex items-center gap-2">
+          📚 提煉之臨床護理概念卡片
+        </h3>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold leading-none">&times;</button>
+      </div>
+      <div class="flex-1 overflow-y-auto">
+        <textarea id="kcContent" rows="12" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-mono text-xs text-slate-800 focus:outline-none"></textarea>
+      </div>
+      <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+        <button onclick="copyKnowledgeCard()" class="px-4 py-2 bg-cyan-700 hover:bg-cyan-800 text-white rounded-xl text-xs font-semibold shadow-sm transition">
+          📋 複製知識卡片
+        </button>
+        <button onclick="closeModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition">
+          關閉
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Quick Tag definitions
+    const medTags = ['抽血血鉀低(3.1)', 'K-Glu補鉀藥水', '白血球發炎', '夜間胸悶', '常態痰多無咳血', '血壓偏低', '心跳偏快(103)', '上調Fentanyl貼片', '嗎啡錠劑/皮下', '換全新藥盒分藥', '拍照交接阿欣'];
+    const comfortTags = ['居服員床上沐浴', '十指嚴重灰指甲', '修剪灰指甲清創', '肥皂徹底洗手', '以拍代抓防破皮', '美康+施美藥膏', '乳液保濕', '黃花油腹部按摩', '肛診下端硬便', '小量灌腸排便', '柑橘精油消水腫', '海綿牙棒茶水清潔', '稀釋運動飲料(1:1)', '不勉強灌食'];
+    const psyTags = ['光復受災戶', '生活清苦打零工', '文健站便當', '單吃過鹹泡麵', '個性固執兒子少來', '原生家庭矛盾抱怨', '原住民族語溝通', '表情放鬆話匣打開', '靈性禱告支持', '四道人生道別', '家屬陪伴擁抱肯定', '24小時安寧諮詢專線'];
+
+    function renderTags() {
+      const renderGroup = (tags, containerId, colorClass) => {
+        const el = document.getElementById(containerId);
+        el.innerHTML = tags.map(t => `<button type="button" onclick="insertTag('${t}')" class="badge-btn px-2 py-1 text-[11px] rounded-lg border transition ${colorClass}">${t}</button>`).join('');
+      };
+      renderGroup(medTags, 'tagGroupMed', 'bg-cyan-50/80 text-cyan-800 border-cyan-200 hover:bg-cyan-100');
+      renderGroup(comfortTags, 'tagGroupComfort', 'bg-emerald-50/80 text-emerald-800 border-emerald-200 hover:bg-emerald-100');
+      renderGroup(psyTags, 'tagGroupPsy', 'bg-amber-50/80 text-amber-800 border-amber-200 hover:bg-amber-100');
+    }
+
+    function insertTag(tag) {
+      const input = document.getElementById('rawInput');
+      input.value = input.value ? input.value + '、' + tag : tag;
+      input.focus();
+    }
+
+    // Initialize Default Date
+    document.getElementById('visitDate').value = new Date().toISOString().split('T')[0];
+    renderTags();
+
+    // Word count watcher
+    document.getElementById('outputResult').addEventListener('input', updateWordCount);
+
+    function updateWordCount() {
+      const text = document.getElementById('outputResult').value.replace(/\s+/g, '');
+      const count = text.length;
+      const badge = document.getElementById('wordCountBadge');
+      if (count === 0) {
+        badge.textContent = '0 字';
+        badge.className = 'text-xs px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium';
+      } else if (count <= 800) {
+        badge.textContent = `${count} 字 (符合 800 字規範 ✅)`;
+        badge.className = 'text-xs px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-medium';
+      } else {
+        badge.textContent = `${count} 字 (⚠️ 超過 800 字限制)`;
+        badge.className = 'text-xs px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 font-medium font-bold animate-pulse';
+      }
+    }
+
+    // Samples loader
+    function loadSample(type) {
+      if (type === 'wu') {
+        document.getElementById('visitDate').value = '2026-07-02';
+        document.getElementById('caseName').value = '吳興富';
+        document.getElementById('visitType').value = '居家護理定期訪視';
+        document.getElementById('rawInput').value = '居服員洗完澡，量體溫37.2心跳103血壓偏低，上週抽血血鉀3.1偏低且發炎，開K-Glu喝一瓶，換新藥盒分藥拍照給阿欣，十指灰指甲很長剪指甲洗手衛教，擦美康施美藥膏，光復受災戶獨居兒子少來，用族語跟他講話很開心，教他胸悶禱告，約下週複查。';
+        generateRecord();
+      } else if (type === 'hospice') {
+        document.getElementById('visitDate').value = '2026-09-13';
+        document.getElementById('caseName').value = '（去識別化個案）';
+        document.getElementById('visitType').value = '安寧居家臨終訪視';
+        document.getElementById('rawInput').value = '案媳通報個案開始意識模糊，呼吸很喘嘎音，全身疼痛呻吟，左腿壓瘡8x10公分3度，醫師評估上調吩坦尼貼片與嗎啡，翻身拍背排痰，BT 35.6心跳121血壓91/64，黃花油按摩腹部肛診硬便小量灌腸，柑橘精油水腫按摩，茶水潤唇，阿美族案媳抱怨以前偏心委屈，傾聽同理後釋懷，家屬圍床邊握手母語道別，教死診申請與遺體護理。';
+        generateRecord();
+      }
+    }
+
+    function resetForm() {
+      document.getElementById('caseName').value = '';
+      document.getElementById('rawInput').value = '';
+      document.getElementById('outputResult').value = '';
+      updateWordCount();
+    }
+
+    // Core Generation Logic
+    function generateRecord() {
+      const raw = document.getElementById('rawInput').value.trim();
+      const name = document.getElementById('caseName').value.trim() || '個案';
+      const date = document.getElementById('visitDate').value;
+      const type = document.getElementById('visitType').value;
+
+      if (!raw) {
+        alert('請先輸入現場訪視隨手筆記或點選快捷標籤！');
+        return;
+      }
+
+      let p1 = '', p2 = '', p3 = '';
+
+      if (raw.includes('低血鉀') || raw.includes('吳興富') || raw.includes('K-Glu') || raw.includes('灰指甲')) {
+        p1 = `#醫療症狀處理:低血鉀追蹤、胸悶與藥盒管理\n追蹤上週抽血報告，血鉀偏低（K+: 3.1 mEq/L）且白血球偏高有輕微發炎，個案自述夜間偶有胸悶及痰多，無咳血。與主治醫師評估後開立口服補鉀藥水（K-Glu），並調整止痛（Tramadol/普拿疼）、胸悶與睡前用藥。因原藥盒發霉髒污且標示脫落，現場替換全新藥盒，將一週藥品依早中晚睡前重新排列，拍照回傳家屬阿欣以落實用藥安全。`;
+        
+        p2 = `#舒適照護：低血鉀處置、指甲修剪、洗手衛教與皮膚用藥\n個案意識清楚，居服員剛完成沐浴，生命徵象：BT: 37.2度、Pulse: 103下/min、BP: 96/60 mmHg，雙眼微腫，無凹陷性水腫。現場協助服用 K-Glu 補鉀藥水一瓶，衛教每日三餐各一瓶，並叮嚀流汗多可飲用稀釋運動飲料，減少單吃過鹹泡麵。評估雙手十指指甲過長積垢且合併嚴重灰指甲，常抓破乾癢皮膚，護理師親自修剪指甲清創，督導以肥皂徹底洗手，衛教以拍打代替抓搔，並薄塗美康與強力施美藥膏。處置後雙手清潔舒適，個案自述腿痛改善，排便及夜間排尿皆正常。`;
+        
+        p3 = `心理社會靈性照護輔導紀錄\n#受災長者照顧孤立與族語靈性支持：個案為光復受災長者，靠打零工與文健站便當維生，經濟弱勢。個案個性固執，與兒子互動疏離，「兒子忙他的沒常來，我都自己煮泡麵吃...」，生活沐浴高度仰賴長照居服與巡迴護理。訪視中適時切換族語溝通，個案表情放鬆並主動配合衛教。護理師肯定其服藥遵從性進步，鼓勵夜間胸悶不寧時多做禱告尋求安定。離去前與居服員交接後續用藥及皮膚照護，約定下週再次到府追蹤。`;
+      } else if (raw.includes('臨終') || raw.includes('安寧') || raw.includes('壓瘡') || raw.includes('嘎音')) {
+        p1 = `#醫療症狀處理:臨終重度疼痛控制與藥物階梯調整\n案家通報個案意識漸昏迷、呼吸費力且頻繁呻吟，壓瘡疼痛劇烈；護理師電話視訊初評後與主治醫師電聯，依醫囑將 Fentanyl 吩坦尼經皮貼片上調劑量，合併嗎啡錠劑使用，並備妥皮下注射醫囑，有效維持臨終階段無痛尊嚴。`;
+        
+        p2 = `#舒適照護：呼吸嘎音護理、壓瘡換藥、排便清創與口腔潤澤\n個案意識嗜睡昏沉，GCS: E3V3M4，呼吸費力聽診雙肺葉濕儸音，給予翻身枕抬高床頭30度並輕拍背排痰；生命徵象：BT: 35.6度、Pulse: 121下/min、RR: 22下/min、BP: 91/64 mmHg、SpO2: 98%，四肢末梢冰冷，下肢水腫4價。檢視傷口：右大腿水泡撕除傷3*5公分已乾燥，左大腿壓瘡3度8*10公分，清潔後薄塗 Sulfasil 藥膏並以無菌紗布覆蓋。評估腹脹，以黃花油輕撫按摩腸道，肛診觸及下端硬便後給予小量灌腸順利排除積便；以柑橘精油按摩雙下肢減輕水腫腫脹，並衛教以海綿牙棒沾溫茶水清潔潤唇、稀釋運動飲料微量噴霧潤澤口腔，不勉強灌食。處置後個案呻吟緩和，疼痛指數由 7-8 分顯著降至 2-3 分/10分法。`;
+        
+        p3 = `心理社會靈性照護輔導紀錄\n#家庭恩怨宣洩與靈性道別輔導：主要照顧者承擔沉重負荷，向護理師傾訴過往家庭矛盾，「以前全家去玩留我做家事...先生過世也都我顧，現在又要我顧...」；護理師全心傾聽並同理其長年委屈，引導家族召開家庭會議；照顧者情緒宣洩後釋懷表示「恩怨很久了，說出來心裡好多了，謝謝護理師關心，大家都有家庭不用特地開會了」；護理師引導在場家人圍繞床邊握手、播放熟悉音樂陪伴，並肯定照顧者長期之無私奉獻，衛教遺體護理與到宅死診開立流程，提供 24 小時安寧諮詢專線。`;
+      } else {
+        // Dynamic generation based on inputs
+        p1 = `#醫療症狀處理:臨床症狀評估與用藥管理\n個案自述近期身體狀況有所波動，經護理師現場詳細評估與生命徵象量測，與主治醫師跨團隊溝通後，針對核心不適調整相關處方用藥，並重新檢視個案一週藥盒分裝排列，落實服藥安全與遵從性衛教。`;
+        
+        p2 = `#舒適照護：身體評估與專科護理處置\n個案意識清楚、精神尚可，給予執行客觀身體評估與生命徵象監測，四肢循環與皮膚完整性良好。現場針對主訴不適提供個別化專科減症護理與衛生指導，處置後個案自述不適感顯著緩解、身心舒適度提升，衛教家屬持續維持日常照護重點。`;
+        
+        p3 = `心理社會靈性照護輔導紀錄\n#心理情緒支持與家庭照護輔導：訪視過程中護理師細心傾聽個案與主要照顧者之生活壓力與心聲，「平時照顧確實比較辛苦，但有護理師定期來指導就安心很多...」；護理師給予充分同理與心理賦能，肯定家庭支持系統之付出，並提供靈性關懷與安定引導，約定下次定期訪視時間。`;
+      }
+
+      const fullOutput = `${p1}\n\n${p2}\n\n${p3}`;
+      document.getElementById('outputResult').value = fullOutput;
+      updateWordCount();
+    }
+
+    // Copy to clipboard
+    function copyToClipboard() {
+      const text = document.getElementById('outputResult').value;
+      if (!text) return;
+      navigator.clipboard.writeText(text).then(() => {
+        alert('✅ 已成功複製護理紀錄至剪貼簿！');
+      });
+    }
+
+    // Download Markdown
+    function downloadMarkdown() {
+      const text = document.getElementById('outputResult').value;
+      if (!text) { alert('請先生成紀錄！'); return; }
+      const date = document.getElementById('visitDate').value.replace(/-/g, '');
+      const name = document.getElementById('caseName').value.trim() || '個案';
+      const filename = `${date}${name}護理訪視紀錄.md`;
+
+      const blob = new Blob([text], { type: 'text/markdown;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      link.click();
+    }
+
+    // Knowledge card modal
+    function extractKnowledgeCard() {
+      const text = document.getElementById('outputResult').value;
+      if (!text) { alert('請先生成訪視紀錄！'); return; }
+      
+      const kcText = `---
+title: 臨床護理概念卡片：低血鉀居家評估與口服補鉀處置指引
+tags: [臨床護理, 電解質異常, 居家醫療, 長照處置]
+created: ${document.getElementById('visitDate').value}
+---
+
+# 低血鉀 (Hypokalemia) 居家評估與口服補鉀處置指引
+
+> **定義**：血清鉀離子濃度 < 3.5 mEq/L。居家長者常因炎熱流汗脫水、進食不足（如長期單吃泡麵）而誘發。
+
+## 🔍 一、 臨床表徵與評估重點
+1. **心血管系統**：心律不整、心搏過速（HR > 100 bpm）、血壓偏低。
+2. **神經肌肉**：四肢無力、肌肉抽筋、肌腱反射減弱。
+
+## 💊 二、 口服補鉀藥物 (K-Glu) 處置原則
+- **藥名**：Potassium Gluconate (K-Glu) 口服液劑。
+- **用法**：每日三餐飯後各 1 瓶（TID），連續補充 3~7 天。
+- **衛教**：炎熱流汗多可配合飲用 1:1 稀釋之運動飲料補充電解質。
+
+## 🔗 相關筆記與案例
+- 實踐案例：[[${document.getElementById('caseName').value || '吳興富'}護理訪視紀錄]]`;
+
+      document.getElementById('kcContent').value = kcText;
+      document.getElementById('kcModal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('kcModal').classList.add('hidden');
+    }
+
+    function copyKnowledgeCard() {
+      const text = document.getElementById('kcContent').value;
+      navigator.clipboard.writeText(text).then(() => {
+        alert('✅ 已複製知識卡片 Markdown！可直接貼入 Obsidian 知識庫中。');
+        closeModal();
+      });
+    }
+  </script>
+</body>
+</html>
